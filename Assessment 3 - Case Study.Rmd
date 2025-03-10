@@ -1,0 +1,591 @@
+# ---------------------------------------------------------------------------- #
+# Assessment 3 - Case Study
+# David Herbert
+# Date: Monday 10th March
+# ---------------------------------------------------------------------------- #
+
+# Introduction 
+# This case study examines player and team performance in the 2020 Super Netball season, focusing on key performance indicators that coaches can use to enhance their decision-making. After some investigation I found the key analytcial areas that Netball Coaches wish to know about include:
+# - Top Performers (Player & Team)
+# - Scoring efficiency
+# - Turnovers & possession control
+# - Defensive strength
+# - Midcourt performance
+# - Discipline (penalties & fouls)
+
+# Included from Alice Sweeting lecture
+# Create a new Rmarkdown file in my directory
+# "flex_dashboard_bslib" sets up a repsonsive interactive dashboard layout 
+rmarkdown::draft("dashboard.Rmd",
+                 template = "flex_dashboard_bslib",
+                 package = "flexdashboard")
+
+#------------------------------------------------------------------------------#
+# Load up required packages, data and check the data is clean and structured correctly
+#------------------------------------------------------------------------------#
+
+# Firstly ensure all required packages are loaded in the library
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(viridis)
+library(flexdashboard)
+
+# Load and Clean the Data set we intend to use
+SuperNetball_data <- read_csv("Dataset3_Assessment3.csv")
+
+# Visualise the entire Super Netball data set within the source to ensure it is loaded
+View(SuperNetball_data)
+
+# Using the Head funstion list the first 6 lines of the Super Netball data set
+head(SuperNetball_data)
+
+# Clean the Super Netball data set and see if their are any missing values
+sum(is.na(SuperNetball_data))
+# No missing data found 
+
+# Using str function ensure the structure of the dataset is correct 
+str(SuperNetball_data)
+
+# Convert both 'Athlete' and 'Team' to categorical variables this allows my R analysis to become more efficient, accurate, and visually clear.  It correctly groups data to assist in visualisations.
+SuperNetball_data <- SuperNetball_data %>%
+  mutate(Athlete = as.factor(Athlete),
+         Team = as.factor(Team),
+         Statistic = as.factor(Statistic))
+
+# Using the distinct() function ensures there are no duplicates and removes them as necessary 
+SuperNetball_data <- SuperNetball_data %>%
+  distinct() 
+
+#------------------------------------------------------------------------------#
+# Look at the Statisical Distribution of the Super Netball data by creating a boxplot
+#------------------------------------------------------------------------------#
+# Create a Boxplot of Statistical Distribution and then develop this using colourblind friendly colours.
+# This boxplot will help with essential understanding of the distribution of player performance in Netball
+# It will help the coach identify strengths, weaknesses and anomalies
+# It can help to enhance decision making for player development, game startegy and recruitment of players.
+
+ggplot(SuperNetball_data, aes(x = Statistic, y = Total, fill = Statistic)) +
+  geom_boxplot(alpha = 0.8) + 
+  scale_fill_viridis_d(option = "D", begin = 0.1, end = 0.9) +  
+  labs(title = "Boxplot of Statistical Distribution",
+       x = "Statistic",
+       y = "Total Values") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    legend.position = "none"
+  )
+
+#------------------------------------------------------------------------------#
+# Summarise the data to provide the coach with some easy essential data to help with planning based on important statistics 
+#------------------------------------------------------------------------------#
+# Discover using code the Top 10 players and teams based on total performance 
+
+# Create a summary of the total column
+summary(SuperNetball_data$Total)
+
+# Check coloumn names to ensure column names are correct before running functions and help prevent errors when filtering, summarizing, and plotting.
+print(colnames(team_performance))
+
+# Using the group_by, summarise, arrange and head fucntions discover the Top 10 players based on total performance
+SuperNetball_data %>%
+  group_by(Athlete) %>%
+  summarise(Total_Sum = sum(Total)) %>%
+  arrange(desc(Total_Sum)) %>%
+  head(10)
+
+# Now rename the top 10 athletes into a data set known as top athletes
+top_athletes <- SuperNetball_data %>%
+  group_by(Athlete) %>%
+  summarise(Total_Performance = sum(Total)) %>%
+  arrange(desc(Total_Performance)) %>%
+  head(10)
+
+# Display Top 10 Athletes due to the head command above 
+print(top_athletes)
+
+# Know show some coding skills by extracting the Top performing athlete in the data set.  This may be important as the coach may want to recruit the best
+top_athlete_name <- top_athletes$Athlete[1]
+
+# Filter Data for the Top Athlete
+top_athlete_data <- SuperNetball_data %>%
+  filter(Athlete == top_athlete_name)
+
+# Display Performance Data for the Top Athlete
+print(paste("Performance Data for:", top_athlete_name))
+
+# # Using the group_by, summarise, arrange and head fucntions discover the Top 10 players based the performance Summary by team 
+team_performance <- SuperNetball_data %>%
+  group_by(Team) %>%
+  summarise(Total_Performance = sum(Total)) %>%
+  arrange(desc(Total_Performance))
+
+# Display Team Performance Summary
+print(team_performance)
+
+# Identify the Most Recorded Statistics
+most_recorded_statistics <- SuperNetball_data %>%
+  group_by(Statistic) %>%
+  summarise(Total_Count = sum(Total)) %>%
+  arrange(desc(Total_Count)) %>%
+  head(10)
+
+# Display Most Recorded Statistics
+print(most_recorded_statistics)
+
+#------------------------------------------------------------------------------#
+# Create a simple Bar Chart as a visualisation for the top 10 players by performance 
+#------------------------------------------------------------------------------#
+ggplot(top_players, aes(x = reorder(Athlete, -Total_Sum), y = Total_Sum, fill = Athlete)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Top 10 Players by Performance", x = "Athlete", y = "Total Score") +
+  theme_minimal()
+
+#------------------------------------------------------------------------------#
+# Create a simple Bar Chart as a visualisation for the top 10 teams by performance 
+#------------------------------------------------------------------------------#
+# The bar chart simplifies complex data into an easy to read format for coaches 
+# Allows the coaches to quickly identify strongest and weakest teams.
+# This may help with coaching, strategy and decision making
+# Provides data to back opinion and can be a visualisation for the team 
+# Add coloublind friendly colours and hide the legend since x axis already has the label for teams 
+ggplot(team_performance, aes(x = reorder(Team, Total_Performance), y = Total_Performance, fill = Team)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +  
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Total Performance by Team", x = "Team", y = "Total Score") +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(size = 12, face = "bold"),
+    axis.text.y = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5)
+  )
+
+#------------------------------------------------------------------------------#
+# Develop Performance Analytics to assist Netball Coaches in important decision making
+#------------------------------------------------------------------------------#
+
+# ---------------------------------------------------------------------------- #
+# 1. Shooting Efficiency & Accuracy Analysis
+# ---------------------------------------------------------------------------- #
+# Looking at Shooting Efficiency and Accuracy
+# Coaches would use this information to identify the most efficient and accurate shooters which may be used for Scouting or Recruitment purposes.
+
+# Now we will look at statistics including goals and attempts from Zone 1 and Zone 2 .  This will show us who us efficient vs volume shooters. It will also distinguish between close range and long range threats and enable accurate calculation of shooting percentages  
+# This may help the coach design better offensive strategies and is clearly helpful for scouting, recrutiment and player development.
+
+# Statistics including goals & attempts from Zone 1 & Zone 2
+scoring_stats <- c("goal_from_zone1", "goal_from_zone2", "attempt_from_zone1", "attempt_from_zone2")
+
+# Using the filter and pivot wider commands summarise the shooting performance of Super Netball 2020 season
+shooting_summary <- SuperNetball_data %>%
+  filter(Statistic %in% scoring_stats) %>%
+  pivot_wider(names_from = Statistic, values_from = Total, values_fill = list(Total = 0)) %>%
+  mutate(
+    Total_Goals = goal_from_zone1 + goal_from_zone2,
+    Total_Attempts = attempt_from_zone1 + attempt_from_zone2,
+    Shooting_Accuracy = ifelse(Total_Attempts > 0, (Total_Goals / Total_Attempts) * 100, 0)  # Replace NA with 0
+  ) %>%
+  arrange(desc(Shooting_Accuracy))
+
+# Display shooting summary viewing the full dataset and then the top 10 shooters 
+View(shooting_summary)  
+View(head(shooting_summary, 10))  
+
+# Checking column names as I have had this issue in the past 
+print(colnames(shooting_summary)) 
+
+# Select the Top 10 Shooters
+top_shooters <- shooting_summary %>%
+  slice_max(order_by = Shooting_Accuracy, n = 10)
+
+# Display Top 10 Shooters
+print(top_shooters)
+
+# ---------------------------------------------------------------------------- #
+# 1a. Basic Bar Chart for Top 10 Shooters by Shooting Accuracy
+# ---------------------------------------------------------------------------- #
+# Bar Chart: Top 10 Shooters by Accuracy
+# Add colourblind friendly colours 
+ggplot(top_shooters, aes(x = reorder(Athlete, Shooting_Accuracy), y = Shooting_Accuracy, fill = Athlete)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +  
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Top 10 Shooters by Accuracy",
+       x = "Athlete",
+       y = "Shooting Accuracy (%)") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 12, face = "bold"),
+    axis.text.y = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5)
+  )
+
+
+# Enhance this plot by adding where the shooting is coming from with a stacked bar plot 
+# Standardise athlete names (removes spaces, converts to title case)
+# Prevents duplicate athlete entries due to name formatting issues.
+# Ensures accurate grouping, filtering, and summarization of player statistics.
+# Fixes issues when merging multiple datasets with inconsistent name formats.
+# Improves searchability and filtering operations in R.
+# Enhances presentation quality for reports, dashboards, and visualizations.
+# Standardizing athlete names ensures accuracy, consistency, and professionalism in Super Netball data analysis! 🔥
+SuperNetball_data <- SuperNetball_data %>%
+  mutate(Athlete = trimws(Athlete)) 
+
+# Filter Shooting-Related Statistics
+shooting_stats <- c("goal_from_zone1", "goal_from_zone2")
+
+# Create shooting data, data set for ease of summary stats 
+shooting_data <- SuperNetball_data %>%
+  filter(Statistic %in% shooting_stats)
+
+# Create a shooting summary of shooting performance ensuring that a focus is given to the top 10 shooters sorted by total goals.  Had to investigate best way to create code for this Summarise Shooting Performance 
+shooting_summary <- shooting_data %>%
+  pivot_wider(names_from = Statistic, values_from = Total, values_fill = list(Total = 0)) %>%
+  group_by(Athlete) %>%  # Group by Athlete to remove duplicates
+  summarise(
+    goal_from_zone1 = sum(goal_from_zone1, na.rm = TRUE),
+    goal_from_zone2 = sum(goal_from_zone2, na.rm = TRUE),
+    Total_Goals = goal_from_zone1 + goal_from_zone2
+  ) %>%
+  ungroup() %>%
+  arrange(desc(Total_Goals))
+
+# Now to create a top shooters data set and limit this to the top 10 shooters.  Found the slice head command to create top 10 
+top_shooters <- shooting_summary %>%
+  distinct(Athlete, .keep_all = TRUE) %>% 
+  slice_head(n = 10)
+
+# Convert Data into Long Format for Stacked Bar Chart which is essential when stacking  multiple categories.  This method allows data readability, simplifies analysis, filtering, grouping and summaries
+top_shooters_long <- top_shooters %>%
+  pivot_longer(cols = c(goal_from_zone1, goal_from_zone2), names_to = "Zone", values_to = "Goals")
+
+# Create a stacked bar chart that shows the top 10 shooters and showing where the shooting is coming from either zone 1 and zone 2
+# Add colour blind friendly colours for readability 
+ggplot(top_shooters_long, aes(x = reorder(Athlete, Total_Goals), y = Goals, fill = Zone)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.8) +  
+  coord_flip() +
+  scale_fill_viridis_d(option = "C", begin = 0.2, end = 0.9, labels = c("Zone 1 Goals", "Zone 2 Goals")) +  
+  labs(title = "Top 10 Shooters: Goals Breakdown by Zone",
+       x = "Athlete",
+       y = "Total Goals",
+       fill = "Scoring Zone") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 12, face = "bold"),
+    axis.text.y = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10)
+  )
+
+# Convert categorical variables to ensure accurate grouping and sorting in analysis.  Helps with plotting and efficiency as per previous 
+SuperNetball_data <- SuperNetball_data %>%
+  mutate(Athlete = as.factor(Athlete),
+         Team = as.factor(Team),
+         Statistic = as.factor(Statistic))
+
+# Filter and extract shooting related statistics goals and attempts from both zone 1 and 2.  This ensures the focus is on shooting which is essential for calculating shooting accuracy.  Allows for comparisaon of close vs long range shooting and create visualisations for scouting and coahcing. 
+shooting_stats <- c("goal_from_zone1", "goal_from_zone2", "attempt_from_zone1", "attempt_from_zone2")
+shooting_data <- SuperNetball_data %>%
+  filter(Statistic %in% shooting_stats)
+
+# Summarize shooting performance
+shooting_summary <- shooting_data %>%
+  pivot_wider(names_from = Statistic, values_from = Total, values_fill = 0) %>%
+  mutate(
+    Total_Goals = goal_from_zone1 + goal_from_zone2,
+    Total_Attempts = attempt_from_zone1 + attempt_from_zone2,
+    Shooting_Accuracy = (Total_Goals / Total_Attempts) * 100
+  ) %>%
+  arrange(desc(Shooting_Accuracy))
+
+# Select the Top 10 Shooters using the slice max command and order this
+top_shooters <- shooting_summary %>%
+  slice_max(order_by = Shooting_Accuracy, n = 10)
+
+# Define shooting-related statistics
+scoring_stats <- c("goal_from_zone1", "goal_from_zone2", "attempt_from_zone1", "attempt_from_zone2")
+
+# Provide a summary of shooting performance using the filter and pivot wider commands and the coalesce command which I found that assists in preventing errors 
+shooting_summary <- SuperNetball_data %>%
+  filter(Statistic %in% scoring_stats) %>%
+  pivot_wider(names_from = Statistic, values_from = Total, values_fill = list(Total = 0)) %>%
+  mutate(
+    Total_Goals = goal_from_zone1 + goal_from_zone2,
+    Total_Attempts = attempt_from_zone1 + attempt_from_zone2,
+    Shooting_Accuracy = ifelse(Total_Attempts > 0, (Total_Goals / Total_Attempts) * 100, 0)  # Prevent division by zero
+  ) %>%
+  arrange(desc(Shooting_Accuracy))
+
+# Ensure Athlete is a factor (important for proper grouping in ggplot)
+top_shooters <- top_shooters %>%
+  mutate(Athlete = as.factor(Athlete))
+
+# Check column names to verify `Total_Attempts` exists
+print(colnames(shooting_summary))
+
+# Select the Top 10 Shooters
+top_shooters <- shooting_summary %>%
+  slice_max(order_by = Shooting_Accuracy, n = 10)
+
+# Print top shooters to check structure
+print(top_shooters)
+
+# ---------------------------------------------------------------------------- #
+# 1b. Create a scatter plot of shooting accuracy vs total attempts
+# ---------------------------------------------------------------------------- #
+# Scatter Plot: Shooting Accuracy vs. Total Attempts
+# This scatter pot is designed to show the relationship of how attempts impact shooting accuracy.  This should help coaches indentify not only effiecient shooters but high volume ones as well.
+# High volume plus high accuracy would be valued as a high recruit, High Volume but low accuracy potenially inefficient shooter 
+# I discovered a way to include the name in the chart to easily identify athelte
+ggplot(top_shooters, aes(x = Total_Attempts, y = Shooting_Accuracy, label = Athlete)) +
+  geom_point(aes(color = Athlete), size = 4, alpha = 0.9) +  
+  geom_smooth(method = "lm", color = "#D55E00", linetype = "dashed", se = FALSE) +  
+  geom_text(vjust = -1, hjust = 0.5, size = 4, color = "black") +  
+  scale_color_viridis_d(option = "C", begin = 0.2, end = 0.9) +  
+  labs(title = "Shooting Accuracy vs. Total Attempts (Top 10 Shooters)",
+       x = "Total Shot Attempts",
+       y = "Shooting Accuracy (%)",
+       color = "Athlete") +  
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 12, face = "bold"),
+    axis.text.y = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    legend.position = "none"  
+  )
+
+# ---------------------------------------------------------------------------- #
+# 2. Turnovers and Possession - Create a turnovers and possession control plot for coaches to visualise
+# ---------------------------------------------------------------------------- #
+# Create a summary of the turnover related statistics which include bad passes, bad hands, general play turnovers and missed goal turnovers. This will allow coaches to identify teams that may be strugglign with the ball.
+turnover_data <- SuperNetball_data %>%
+  filter(Statistic %in% c("badPasses", "badHands", "generalPlayTurnovers", "missedGoalTurnover")) %>%
+  group_by(Team) %>%
+  summarise(Total_Turnovers = sum(Total))
+
+# Display Turnovers by Team
+View(turnover_data)
+  
+# Provide a summary of turnovers by the type and team 
+turnover_breakdown <- SuperNetball_data %>%
+  filter(Statistic %in% c("badPasses", "badHands", "generalPlayTurnovers", "missedGoalTurnover")) %>%
+  group_by(Team, Statistic) %>%
+  summarise(Total_Turnovers = sum(Total), .groups = "drop")
+
+# Display the turnover breakdown 
+View(turnover_breakdown)
+
+# I initially created a bar chart that simply gave me just the total turnovers but I wanted something to break this down further 
+# I researched and decided to creat a Stacked Bar Chart that show the amount of turnovers and breakdown of these turnovers
+# Shows which type of turnover (bad passes, bad hands, missed goal turnovers) is most common per team.
+# This would help coaches identify specific areas of improvement in realtion to turnovers 
+ggplot(turnover_breakdown, aes(x = reorder(Team, -Total_Turnovers), y = Total_Turnovers, fill = Statistic)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Turnover Breakdown by Type per Team", x = "Team", y = "Total Turnovers") +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C")
+
+# ---------------------------------------------------------------------------- #
+# 2b. Turnovers - Create a boxplot for turnover distribution per team
+# ---------------------------------------------------------------------------- #
+
+# This would provide a statistcal summary for coaches and which teams have the widest range of turnovers and outliers 
+# It should show team with highest turnovers and outliers struggle the most
+# Team turnovers vs team performance 
+ggplot(turnover_breakdown, aes(x = Team, y = Total_Turnovers, fill = Team)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red") +
+  coord_flip() +
+  labs(title = "Turnovers Distribution per Team", x = "Team", y = "Total Turnovers") +
+  theme_minimal() +
+  scale_fill_viridis_d(option = "C")
+
+# ---------------------------------------------------------------------------- #
+# 3. Defensive strengths - Look at defensive strengths of the super netball teams
+# ---------------------------------------------------------------------------- #
+# Provide a sumarry of defensive statistics looking at intercepts, deflections, blocks, rebounds
+defensive_data <- SuperNetball_data %>%
+  filter(Statistic %in% c("intercepts", "deflections", "blocks", "rebounds")) %>%
+  group_by(Athlete) %>%
+  summarise(Total_Defensive_Actions = sum(Total)) %>%
+  arrange(desc(Total_Defensive_Actions))
+
+# Display a list of the Top 10 Defenders
+head(defensive_data, 10)
+# Display full list of defender in ranking order from the dataset
+view(defensive_data)
+
+# Filter defensive statistics
+defensive_stats <- c("intercepts", "deflections", "blocks", "rebounds")
+defensive_data <- SuperNetball_data %>%
+  filter(Statistic %in% defensive_stats)
+
+# Summarize defensive performance by athlete
+defensive_summary <- defensive_data %>%
+  group_by(Athlete, Statistic) %>%
+  summarise(Total_Defensive_Actions = sum(Total), .groups = "drop")
+
+# Display defensive summary 
+View(defensive_summary)
+
+# ---------------------------------------------------------------------------- #
+# Create a whisker plot which will show the spread of defensive actions across various statistics 
+# ---------------------------------------------------------------------------- #
+# I will highlight the outliers either exceptional or poor performances
+# I will then compare the intercetps, deflections, blocks and rebounds within the plot
+  ggplot(defensive_summary, aes(x = Statistic, y = Total_Defensive_Actions, fill = Statistic)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.shape = 16) +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Distribution of Defensive Actions Across Players",
+       x = "Defensive Statistic",
+       y = "Total Defensive Actions") +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(size = 12, angle = 45, hjust = 1, face = "bold"),
+    axis.text.y = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5)
+  )
+
+# ---------------------------------------------------------------------------- #
+# Possession Play - focus on midcourt performance and passing efficency, providing a summary of passing and feeds 
+# ---------------------------------------------------------------------------- #
+# Possession of the Netball is the key to the sport and key defenders are paramount to the teams success by gaining possession.  Coaches want to see their teams with the Netball so crucial area for coaches 
+midcourt_data <- SuperNetball_data %>%
+  filter(Statistic %in% c("feeds", "feedWithAttempt", "centrePassReceives")) %>%
+  group_by(Athlete) %>%
+  summarise(Total_Feeds = sum(Total)) %>%
+  arrange(desc(Total_Feeds))
+
+# View the entire mid court data set
+view(midcourt_data)
+
+# Display Top 10 Midcourt Players
+head(midcourt_data, 10)
+
+# Create a visualisation about the influence the midcourt has on the super netball league 
+# Dispaly which players are creatig goal scoring opportunities 
+ggplot(head(midcourt_data, 10), aes(x = reorder(Athlete, -Total_Feeds), y = Total_Feeds, fill = Athlete)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Top 10 Playmakers (Feeds)", x = "Athlete", y = "Total Feeds") +
+  theme_minimal()
+  
+# Convert categorical variables
+SuperNetball_data <- SuperNetball_data %>%
+  mutate(Athlete = as.factor(Athlete),
+         Team = as.factor(Team),
+         Statistic = as.factor(Statistic))
+
+# Filter midcourt statistics
+midcourt_stats <- c("feeds", "feedWithAttempt", "centrePassReceives")
+midcourt_data <- SuperNetball_data %>%
+  filter(Statistic %in% midcourt_stats)
+
+# Summarise midcourt performance by team
+midcourt_team_summary <- SuperNetball_data %>%
+  filter(Statistic %in% c("feeds", "feedWithAttempt", "centrePassReceives")) %>%
+  group_by(Team, Statistic) %>%
+  summarise(Total_Actions = sum(Total), .groups = "drop")
+
+# Create grouped bar chart with a summary of midcourt statistics providing a team comparison with easy side by side comparison with feeds, feed attempts and centre pass receives
+# Coaches can identify which teams have strong midcourt playmakers and which aspects they are very good.
+# Centre pass receives indicate strong ball progression from the centre
+# Higher feed attempts may suggest aggressive attacking style of  play
+ggplot(midcourt_team_summary, aes(x = Team, y = Total_Actions, fill = Statistic)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Midcourt Performance by Team: Feeds, Feed Attempts & Centre Pass Receives",
+       x = "Team",
+       y = "Total Actions",
+       fill = "Midcourt Statistic") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 12, angle = 45, hjust = 1, face = "bold"),
+    axis.text.y = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5)
+  )
+
+# ---------------------------------------------------------------------------- #
+# 4. Fouls and Discipline - create a summary and visualisation of penalties by a player
+# ---------------------------------------------------------------------------- #
+# Summarise penalties by player
+penalty_data <- SuperNetball_data %>%
+  filter(Statistic %in% c("contactPenalties", "obstructionPenalties", "offsides", "breaks")) %>%
+  group_by(Athlete, Statistic) %>%
+  summarise(Total_Penalties = sum(Total), .groups = "drop") %>%
+  arrange(desc(Total_Penalties))
+
+# Check if data contains the correct columns
+head(penalty_data)
+
+# Dispaly the penalised player data 
+view(penalty_data)
+
+# Display the top 10 penalised players 
+head(penalty_data, 10)
+
+# Create a visualisation of the players with the most penalities 
+# Visualization: Players with Most Penalties
+
+# Create Bar Chart
+ggplot(head(penalty_data, 10), aes(x = reorder(Athlete, -Total_Penalties), y = Total_Penalties, fill = Athlete)) +
+  geom_bar(stat = "identity", width = 0.8) +  # Adjust width for better spacing
+  coord_flip() +
+  scale_fill_viridis_d(option = "C", begin = 0.2, end = 0.9) +  # Colorblind-friendly colors
+  labs(title = "Top 10 Most Penalized Players",
+       x = "Athlete",
+       y = "Total Penalties",
+       fill = "Athlete") +  # Legend for athletes
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 12, face = "bold"),
+    axis.text.y = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    legend.position = "none"  # Hides legend since names are already on the y-axis
+  )
+
+# Converting categorical variables again as part of my process
+SuperNetball_data <- SuperNetball_data %>%
+  mutate(Athlete = as.factor(Athlete),
+         Team = as.factor(Team),
+         Statistic = as.factor(Statistic))
+         
+#------------------------------------------------------------------------------#
+# 5. Discipline - Find a way to display discipline related penalities and fouls
+#------------------------------------------------------------------------------#
+# Filter penalty related statistics, obstrcution penalities, offsides, breaks
+penalty_stats <- c("contactPenalties", "obstructionPenalties", "offsides", "breaks")
+penalty_data <- SuperNetball_data %>%
+  filter(Statistic %in% penalty_stats)
+
+# Create a whisker plot which will show variation in penalty counts and help to identify which penalty types are high or vary. It show outliers and highlights players that commit unusally high number of specific foul.
+# This shows contact and obstruction have higher median, meaning more frequent of the penalitie.  Can allow coaches to focus on specific infractions and discipline areas
+ggplot(penalty_data, aes(x = Statistic, y = Total_Penalties, fill = Statistic)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", outlier.shape = 16) +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Whisker Plot: Distribution of Penalties Across Teams",
+       x = "Penalty Type",
+       y = "Total Penalties") +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(size = 12, angle = 45, hjust = 1, face = "bold"),
+    axis.text.y = element_text(size = 12, face = "bold"),
+    axis.title = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5)
+  )
+  
