@@ -54,6 +54,8 @@ str(SuperNetball_data)
 # It will help the coach identify strengths, weaknesses and anomalies
 # It can help to enhance decision making for player development, game startegy and recruitment of players.
 
+# Display the entire dataset using datatable 
+datatable(SuperNetball_data, options = list(scrollX = TRUE, pageLength = 10))
 ```
 
 Column {data-width=650}
@@ -145,6 +147,11 @@ top_players <- SuperNetball_data %>%
 # Display Top 10 Athletes
 view(top_players)
 
+# Create a table sumarrising team perforamnce 
+datatable(team_performance)
+
+#Create a data table of top performing players 
+datatable(top_players)
 
 # Create the Top Performing Athletes Data 
 # Ensure no errors if top_players is empty
@@ -168,6 +175,8 @@ most_recorded_statistics <- SuperNetball_data %>%
 
 # Display Most Recorded Statistics
 view(most_recorded_statistics)
+
+datatable(most_recorded_statistics)
 ```
 
 Column {data-width=350}
@@ -281,6 +290,9 @@ top_shooters <- shooting_accuracy %>%
 # Display Top 10 Shooters
 print(top_shooters)
 view(top_shooters)
+
+# Create a data table of the op shootere
+datatable(top_shooters)
 
 # Display shooting summary viewing the full dataset and then the top 10 shooters 
 View(shooting_summary)  
@@ -486,6 +498,9 @@ turnover_breakdown <- SuperNetball_data %>%
 # Display the turnover breakdown 
 View(turnover_breakdown)
 
+# Create a table showing turnover data 
+datatable(turnover_data)
+
 # I initially created a bar chart that simply gave me just the total turnovers but I wanted something to break this down further 
 # I researched and decided to creat a Stacked Bar Chart that show the amount of turnovers and breakdown of these turnovers
 # Shows which type of turnover (bad passes, bad hands, missed goal turnovers) is most common per team.
@@ -681,6 +696,23 @@ view(penalty_data)
 
 # Display the top 10 penalised players 
 head(penalty_data, 10)
+
+penalty_data <- SuperNetball_data %>%
+  filter(Statistic %in% c("contactPenalties", "obstructionPenalties", "offsides", "breaks")) %>%
+  group_by(Athlete, Statistic) %>%
+  summarise(Total_Penalties = sum(Total), .groups = "drop") %>%
+  arrange(desc(Total_Penalties)) %>%
+  slice_head(n = 10)
+
+ggplot(penalty_data, aes(x = reorder(Athlete, -Total_Penalties), y = Total_Penalties, fill = Statistic)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  coord_flip() +
+  scale_fill_viridis_d(option = "C") +
+  labs(title = "Top 10 Most Penalized Players", x = "Athlete", y = "Total Penalties") +
+  theme_minimal()
+
+# Create a tabke with top 10 penalised players 
+datatable(penalty_data)
 
 # Create a visualisation of the players with the most penalities 
 # Visualization: Players with Most Penalties
