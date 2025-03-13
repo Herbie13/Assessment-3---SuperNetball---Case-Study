@@ -46,14 +46,14 @@ SuperNetball_data <- distinct(SuperNetball_data)
 # Using str function ensure the structure of the dataset is correct
 str(SuperNetball_data)
 
-#------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------------------------#
 # Look at the Statisical Distribution of the Super Netball data by creating a boxplot
-#------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------------------------#
 # Create a Boxplot of Statistical Distribution and then develop this using colourblind friendly colours.
 # This boxplot will help with essential understanding of the distribution of player performance in Netball
 # It will help the coach identify strengths, weaknesses and anomalies
 # It can help to enhance decision making for player development, game startegy and recruitment of players.
-
+#-------------------------------------------------------------------------------------------------------------#
 # Display the entire dataset using datatable 
 datatable(SuperNetball_data, options = list(scrollX = TRUE, pageLength = 10))
 ```
@@ -78,12 +78,11 @@ ggplot(SuperNetball_data, aes(x = Statistic, y = Total, fill = Statistic)) +
 
 ```{r}
 
-#------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------------------------#
 # Summarise the data to provide the coach with some easy essential data to help with planning based on important statistics 
-#------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------------------------#
 # Discover using code the Top 10 players and teams based on total performance 
 # Using the filter and pivot wider commands summarise the shooting performance of Super Netball 2020 season
-
 # Convert data into wide format so that each athlete has separate shooting statistics
 
 # Define shooting-related statistics
@@ -165,8 +164,7 @@ if (nrow(top_players) > 0)
   print(paste("Performance Data for:", top_players_name))
   view(top_player_data)
 
-
-# Create and cinsider the most recorded statistics 
+# Create and consider the most recorded statistics 
 most_recorded_statistics <- SuperNetball_data %>%
   group_by(Statistic) %>%
   summarise(Total_Count = sum(Total, na.rm = TRUE)) %>%
@@ -176,6 +174,7 @@ most_recorded_statistics <- SuperNetball_data %>%
 # Display Most Recorded Statistics
 view(most_recorded_statistics)
 
+# Create a data table that clearly shows the most recorded statstics 
 datatable(most_recorded_statistics)
 ```
 
@@ -224,16 +223,14 @@ ggplot(team_performance, aes(x = reorder(Team, Total_Performance), y = Total_Per
 
 
 ```{r}
-#------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------------------------#
 # Develop Performance Analytics to assist Netball Coaches in important decision making
-#------------------------------------------------------------------------------#
-
-# ---------------------------------------------------------------------------- #
+#-------------------------------------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------------------------#
 # 1. Shooting Efficiency & Accuracy Analysis
-# ---------------------------------------------------------------------------- #
+#-------------------------------------------------------------------------------------------------------------#
 # Looking at Shooting Efficiency and Accuracy
 # Coaches would use this information to identify the most efficient and accurate shooters which may be used for Scouting or Recruitment purposes.
-
 # Now we will look at statistics including goals and attempts from Zone 1 and Zone 2 .  This will show us who us efficient vs volume shooters. It will also distinguish between close range and long range threats and enable accurate calculation of shooting percentages  
 # This may help the coach design better offensive strategies and is clearly helpful for scouting, recrutiment and player development.
 
@@ -298,9 +295,9 @@ datatable(top_shooters)
 View(shooting_summary)  
 View(head(shooting_summary, 10))  
 
-# ---------------------------------------------------------------------------- #
+#-------------------------------------------------------------------------------------------------------------#
 # 1a. Basic Bar Chart for Top 10 Shooters by Shooting Accuracy
-# ---------------------------------------------------------------------------- #
+#-------------------------------------------------------------------------------------------------------------#
 # Bar Chart: Top 10 Shooters by Accuracy
 # Add colourblind friendly colours 
 
@@ -336,10 +333,14 @@ ggplot(top_shooters, aes(x = reorder(Athlete, Shooting_Accuracy), y = Shooting_A
 
 
 ```{r}
+#-------------------------------------------------------------------------------------------------------------#
+# Create a stacked bar chart to demonstrate where the scoring was occuring from either Zone 1 or 2
+#-------------------------------------------------------------------------------------------------------------#
+
 # Filter Shooting-Related Statistics
 shooting_stats <- c("goal_from_zone1", "goal_from_zone2")
 
-# Create shooting data, data set for ease of summary stats 
+# Create a data set that represents statistics and shooting stats which will help with summary statistics 
 shooting_data <- SuperNetball_data %>%
   filter(Statistic %in% shooting_stats)
 
@@ -347,7 +348,7 @@ shooting_data <- SuperNetball_data %>%
 top_shooters_long <- top_shooters %>%
   pivot_longer(cols = c(goal_from_zone1, goal_from_zone2), names_to = "Zone", values_to = "Goals")
 
-# Create a stacked bar chart that shows the top 10 shooters and showing where the shooting is coming from either zone 1 and zone 2
+# Now create the stacked bar chart that shows the top 10 shooters and showing where the shooting is coming from either zone 1 and zone 2
 # Add colour blind friendly colours for readability 
 
 
